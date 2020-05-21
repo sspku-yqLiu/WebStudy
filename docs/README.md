@@ -116,3 +116,373 @@ function test(ele) {
 
 # NodeJS
 
+# 计算机网络
+
+# React
+
+### style
+
+style 应该是预先写好的 而不是字符串
+
+Error: The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.    in h1 (at src/index.js:22)    in div (at src/index.js:21)
+
+```jsx
+let classStr = ['abc','redBg'];//abc,redBg
+```
+
+正确的做法：使用join拼接:
+
+```jsx
+<h1  className={classStr.join(" ")} > Style </h1>//abc redBg
+```
+
+添加背景：
+
+```jsx
+let exampleStyle = {
+  background:"skyblue",
+  borderBottom:"1px solid red",
+  //由于有-只能圈起来
+  'background-image':"url(https://www.baidu.com/s?wd=2020%e5%b9%b4%e5%85%a8%e5%9b%bd%e4%b8%a4%e4%bc%9a&sa=ire_dl_gh_logo&rsv_dl=igh_logo_pc)"
+}
+//也可以这样并起来
+  backgroundImage:"url(https://www.baidu.com/img/pc_cc75653cd975aea6d4ba1f59b3697455.png)",
+```
+
+## 基础
+
+### 函数式组件
+
+```jsx
+function Childcom(){
+  let title = <h2> subTitle </h2>
+  return(
+      <div>
+        <h1> Hello world</h1>
+        {title}
+      </div>
+  )
+}
+
+
+ReactDOM.render(
+  <Childcom></Childcom>,
+  document.getElementById('root')
+);
+
+```
+
+### 状态：(React State)
+
+相当于vue Data
+
+下面老看一个时钟
+
+```jsx
+class Clock extends React.Component{
+  //
+  constructor(props){
+    //这样之后才可以用this.props
+    super(props);
+    //状态(data)--->view
+
+  }
+  render(){
+    //应该放在渲染函数里面进行渲染
+    this.state = {
+      time:new Date().toLocaleTimeString()
+    }
+    // console.log(this.state.time);
+    return(
+    <div>
+      <h1> {this.state.time} </h1>
+    </div>
+    )
+  }
+}
+```
+
+注意：
+
+```jsx
+//如果反复进行一个组件的初始化，他是不会反复重建的
+setInterval(()=>{ReactDOM.render(
+  <Clock></Clock>,
+  document.getElementById('root')
+  )
+  console.log(new Date())
+}
+,
+1000);
+```
+
+### 使用生命周期函数对组件进行操作
+
+```jsx
+class Clock extends React.Component{
+  //
+  constructor(props){
+    //这样之后才可以用this.props
+    super(props);
+    //状态(data)--->view
+    this.state = {
+      time:new Date().toLocaleTimeString()
+    }
+  }
+  render(){
+    //这会导致组件的耦合度很高
+
+    // console.log(this.state.time);
+    return(
+    <div>
+      <h1> {this.state.time} </h1>
+    </div>
+    )
+  }
+  //生命周期函数 渲染完成：
+  componentDidMount(){
+    setInterval(()=>{
+      this.state.time = new Date().toLocaleString();
+    },1000);
+  }
+}
+```
+
+但是上面的操作是不推荐的，
+
+我们应该使用setState来进行局部的dom更新:
+
+```jsx
+
+
+  //生命周期函数 渲染完成：
+  componentDidMount(){
+    setInterval(()=>{
+      console.log(this.state.time);
+      //修改完之后并不会立即修改dom内容。
+      //react会在这个函数内部所有设置的状态
+      //等待内部所有完成之后进行更新
+      //小程序也是借鉴react状态管理操作
+      this.setState({
+        time:new Date().toLocaleString()
+      })
+      console.log(this.state.time);
+    },1000);
+  }
+```
+
+### 父子数据传递
+
+props 可以设置默认值：
+
+HelloMessage.defaultProps = { name : 'yqLiu' msg:'helloworld' }
+
+
+
+props可以传递函数，props传递父元素的函数，就可以去修改父元素的状态state,从而达到传递数据给父元素的效果。
+
+#### props机制（父->子)
+
+props的传值可以是任意的类型
+
+注意props和State是两个不同的东西
+
+```jsx
+class ChildComponent extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    return (
+      <div display={this.props.isActive?'block':'None'}> 
+        ChildComponent
+      </div>
+    )
+  }
+}
+```
+
+#### 子传父
+
+调用父元素的函数，从而实现数据的子传递父
+
+```jsx
+export default class ChildComponent extends Component {
+  constructor(props) {
+    super(props)
+  
+    this.state = {
+       msg:'hi father'
+    }
+  }
+  
+  render() {
+    return (
+      <div>
+        <button onClick={this.sendData}>传给父元素</button>
+      </div>
+    )
+  }
+  //使用箭头函数可以防止循环溢出
+  sendData=()=>{
+    this.props.getChildMsg(this.state.msg)
+  }
+}
+```
+
+注意不能直接使用传递过来的参数
+
+```jsx
+        {/* 注意 直接进行调用可能会导致循环渲染 */}
+        <button onClick={this.props.getChildMsg('hello father')}>传给父元素</button>
+```
+
+使用箭头函数进行传参
+
+```jsx
+        {/* 要使用箭头函数进行传参 */}
+        <button onClick={()=>this.props.getChildMsg('hello father')}>传给父元素</button>
+```
+
+### React事件
+
+React 事件特点;
+
+- 他绑定属性的命名是使用的驼峰命名法
+- 如果采用jsx语法，用{}，传入一个函数，而不是字符串
+
+事件对象：
+
+```jsx
+  parentEvent= (e)=>{
+    console.log(e);
+    //react的代理的原生事件对象
+  }
+```
+
+普通的html中阻止默认行为 可以直接return false;
+
+React中，必须prevetDefault
+
+```jsx
+  parentEvent= (e)=>{
+    //react的代理的原生事件对象
+    console.log(e.preventDefault);
+
+    //由于是代理 所以不能直接returnfalse 不能拦截
+    //使用preventDefault进行拦截
+    e.preventDefault();
+    return false;
+  }
+```
+
+如何传参的时候不丢失事件？
+
+```jsx
+{/* 这样就变成了一个调用,使用箭头函数 使用e进行传参 */}
+<button onClick={(e)=>this.parentEvent1('helloworld',e)}>submit</button>
+
+  parentEvent1= (msg,e)=>{
+    //react的代理的原生事件对象
+    console.log(msg)
+    console.log(e)
+  }
+```
+
+注意不使用箭头函数会导致this的问题
+
+```jsx
+        {/* 不使用箭头函数要使用bind */}
+        <button onClick={function(e){this.parentEvent1('helloworld',e)}.bind(this)}>submit</button>
+```
+
+### React条件渲染
+
+- 直接通过条件判断返回需要渲染的jsx对象
+
+判断是否登录：
+
+```jsx
+function UserGreet(props){
+  return (<h1>Welcome</h1>);
+}
+function UserLogin(props){
+  return (<h1>请先登录</h1>)
+}
+
+render() {
+    if(this.state.isLogin){
+      return (<UserGreet/>);
+    }else{
+      return (<UserLogin/>)
+    }
+```
+
+注意 函数的引入必须使用component样式，不能直接return UserLogin- 
+
+- 通过条件运算得出jsx对象，再将jsx对象渲染到模板中
+
+```jsx
+  render() {
+    let ele = null;
+    if(this.state.isLogin){
+      ele =<UserGreet/>;
+    }else{
+      ele = <UserLogin/>
+    }
+    return (
+      <div>
+        <h1>yqLiu's Home</h1>
+        {ele}
+        <button onClick={()=>this.setState({isLogin:!this.state.isLogin})}>LogIn</button>
+      </div>
+    )
+  
+```
+
+- 同样的，你也可以使用三元运算符：
+
+```jsx
+      <div>
+        <h1>yqLiu's Home</h1>
+        {this.state.isLogin?<UserGreet/>:<UserLogin/>}
+        <button onClick={()=>this.setState({isLogin:!this.state.isLogin})}>LogIn</button>
+      </div>
+```
+
+#### 列表渲染
+
+将列表的内容拼装成数组 放置到模板当中
+
+如果直接使用：
+
+  ```jsx
+let arr = ['代码补全','lsp解析','js学习文档'];    
+{arr}
+  ```
+
+会输出
+
+```jsx
+代码补全lsp解析js学习文档
+```
+
+如果我们使用html对象
+
+```jsx
+let arr = [<li>'代码补全'</li>,'lsp解析','js学习文档'];
+```
+
+
+
+![image-20200521165437686](README.assets/image-20200521165437686.png)
+
+可以使用map:
+
+```jsx
+    {arr.map((e)=>{return <YqLiuComponent childData={e}></YqLiuComponent>})}
+```
+
+效果：
+
+![image-20200521170001124](README.assets/image-20200521170001124.png)
